@@ -1,5 +1,5 @@
 import { bricolage_grotesque } from "@/lib/fonts";
-import { FeedCard } from "./ui/FeedCard";
+import { FeedCard } from "../ui/FeedCard";
 
 const todayFeeds = [
   {

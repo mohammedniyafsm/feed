@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { TextAnimate } from "@/components/ui/text-animate";
 import { bricolage_grotesque, inter } from "@/lib/fonts";
 import { FeedCard } from "@/components/ui/FeedCard";
-import FeedComponent from "@/components/FeedComponent";
+import FeedComponent from "@/components/FEEDBACK-COMP/FeedComponent";
 
 function FeedBack() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);

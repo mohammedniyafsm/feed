@@ -17,7 +17,7 @@ export const Navbar =()=>{
         </div>
         <div className="flex gap-4">
             <Button variant={"outline"}>Log in</Button>
-            <Button className="bg-white">Sign up</Button>
+            <Button className="bg-white"> <Link href="/sign-in" >Sign up</Link></Button>
         </div>
      </div>
     </>    
