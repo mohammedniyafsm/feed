@@ -12,13 +12,108 @@ enum Role {
   ADMIN
 }
 
+enum Category {
+  QUOTE
+  PRESENTATION
+  SELF_INTRO
+}
+
+enum IdeaCategory {
+  COMMUNICATION
+  TECHNICAL
+  ENVIRONMENT
+  PROBLEM
+  OTHER
+}
+
 model User {
-  id        String   @id @default(uuid())
-  username  String
-  email     String?  @unique
-  image     String
-  githubId  String   @unique
-  role      Role     @default(USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String         @id @default(uuid())
+  username      String
+  email         String?        @unique
+  image         String
+  githubId      String         @unique
+  role          Role           @default(USER)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  section       Section[]
+  feedback      Feedback[]
+  sectionLikes  SectionLike[]
+  ideas         Ideas[]
+  IdeaComment   IdeaComment[]
+  IdeaLike      IdeaLike[]
+}
+
+model Section {
+  id            String         @id @default(uuid())
+  userId        String  
+  category      String
+  topic         String?
+  date          DateTime
+  createdAt     DateTime       @default(now())
+  user          User           @relation(fields: [userId], references: [id])
+  feedback      Feedback[]
+  sectionLikes  SectionLike[]
+}
+
+model SectionLike {
+  id            String        @id @default(uuid())
+  sectionId     String
+  userId        String
+  createdAt     DateTime      @default(now())
+
+  user          User          @relation(fields: [userId], references: [id])
+  section       Section       @relation(fields: [sectionId], references: [id])
+
+  @@unique([sectionId, userId]) // ensures a user can like a feedback only once
+}
+
+model Feedback {
+  id            String         @id @default(uuid())
+  userId        String
+  sectionId     String
+  comment       String
+  anonymous     Boolean
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  user          User           @relation(fields: [userId], references: [id])
+  section       Section        @relation(fields: [sectionId], references: [id])
+}
+
+model Ideas {
+  id          String         @id @default(uuid())
+  userId      String
+  category    IdeaCategory
+  title       String
+  description String
+  anonymous   Boolean        @default(false)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  user        User           @relation(fields: [userId], references: [id])
+  comments    IdeaComment[]
+  likes       IdeaLike[]
+}
+
+model IdeaComment {
+  id          String     @id @default(uuid())
+  ideaId      String
+  userId      String
+  comment     String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  idea        Ideas      @relation(fields: [ideaId], references: [id])
+  user        User       @relation(fields: [userId], references: [id])
+}
+
+model IdeaLike {
+  id          String     @id @default(uuid())
+  ideaId      String
+  userId      String
+  createdAt   DateTime   @default(now())
+
+  idea        Ideas      @relation(fields: [ideaId], references: [id])
+  user        User       @relation(fields: [userId], references: [id])
+
+  @@unique([ideaId, userId])
 }

@@ -10,24 +10,26 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GITHUB_SECRET!,
     }),
   ],
+
   callbacks: {
     async signIn({ user }) {
       try {
-        const existingUser = await prisma.user.findFirst({
+        let existingUser = await prisma.user.findFirst({
           where: { githubId: user.id },
-        });
+        })
 
         if (!existingUser) {
-          await prisma.user.create({
+          existingUser = await prisma.user.create({
             data: {
               username: user.name ?? "Unknown User",
               email: user.email,
               image: user.image ?? "",
-              githubId: user.id,
+              githubId: user.id?.toString() ?? "",
             },
           });
         }
 
+        (user as any).dbId = existingUser.id;
         return true;
       } catch (error) {
         console.error("Error during sign-in:", error);
@@ -37,9 +39,14 @@ export const authOptions: NextAuthOptions = {
 
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id ? user.id.toString() : undefined;
+        token.id = (user as any).dbId ?? token.id;
         token.email = user.email ?? undefined;
         token.username = user.name ?? "Unknown User";
+      } else if (token.email) {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: token.email },
+        });
+        if (dbUser) token.id = dbUser.id;
       }
       return token;
     },
@@ -53,9 +60,10 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
+
   session: { strategy: "jwt" },
   secret: process.env.NEXTAUTH_SECRET,
-  pages : {
-    signIn : '/sign-in'
-  }
+  pages: {
+    signIn: "/sign-in",
+  },
 };
