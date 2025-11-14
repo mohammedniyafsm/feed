@@ -1,120 +1,57 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import axios from "axios";
+import  {FeedCard}  from "../ui/FeedCard";
 import { bricolage_grotesque } from "@/lib/fonts";
-import { FeedCard } from "../ui/FeedCard";
+import CardSkeleton from "../ui/CardSkeleton";
 
-const todayFeeds = [
-  {
-    quote: "Team brainstormed new feature ideas for next sprint.",
-    author: "Niyaf",
-    likes: 14,
-    comments: 4,
-    categories: "Product",
-  },
-  {
-    quote: "UI review for dashboard layout completed successfully.",
-    author: "Aisha",
-    likes: 9,
-    comments: 2,
-    categories: "Design",
-  },
-  {
-    quote: "Discussed integration of cloud backup with MongoDB.",
-    author: "Ravi",
-    likes: 20,
-    comments: 5,
-    categories: "Engineering",
-  },
-  {
-    quote: "Planned beta testing for new booking feature.",
-    author: "Sara",
-    likes: 11,
-    comments: 3,
-    categories: "Testing",
-  },
-  {
-    quote: "Reviewed feedback from FOSS Hack mentors.",
-    author: "Irfan",
-    likes: 8,
-    comments: 1,
-    categories: "Community",
-  },
-];
-
-const yesterdayFeeds = [
-    {
-    quote: "UI review for dashboard layout completed successfully.",
-    author: "Aisha",
-    likes: 9,
-    comments: 2,
-    categories: "Design",
-  },
-  {
-    quote: "Discussed integration of cloud backup with MongoDB.",
-    author: "Ravi",
-    likes: 20,
-    comments: 5,
-    categories: "Engineering",
-  },
-  {
-    quote: "Planned beta testing for new booking feature.",
-    author: "Sara",
-    likes: 11,
-    comments: 3,
-    categories: "Testing",
-  },
-  {
-    quote: "Setup CI/CD pipeline for faster deployment.",
-    author: "Devraj",
-    likes: 15,
-    comments: 2,
-    categories: "DevOps",
-  },
-  {
-    quote: "Conducted user research for UI improvements.",
-    author: "Meena",
-    likes: 6,
-    comments: 1,
-    categories: "Research",
-  },
-];
-
-function FeedComponent() {
-  return (
-    <div className="px-20 pt-20 pb-10 bg-black text-white">
-      {/* Today’s Highlights */}
-      <section>
-        <h2
-          className={`${bricolage_grotesque} text-3xl font-semibold text-white`}
-        >
-          Today’s Highlights
-        </h2>
-
-        <div className="flex flex-wrap gap-6 justify-start mt-8">
-          {todayFeeds.map((feed, index) => (
-            <div key={index} className="w-[400px]">
-              <FeedCard {...feed} />
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Yesterday’s Highlights */}
-      <section className="mt-16">
-        <h2
-          className={`${bricolage_grotesque} text-3xl font-semibold text-white`}
-        >
-          Yesterday’s Highlights
-        </h2>
-
-        <div className="flex flex-wrap gap-6 justify-start mt-8">
-          {yesterdayFeeds.map((feed, index) => (
-            <div key={index} className="w-[400px]">
-              <FeedCard {...feed} />
-            </div>
-          ))}
-        </div>
-      </section>
-    </div>
-  );
+interface FeedProps {
+  heading: string;
+  query: string;
 }
 
-export default FeedComponent;
+export default function FeedComponent({ heading, query }: FeedProps) {
+  const [sections, setSections] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      const res = await axios.get(`/api/section/user/search?${query}`);
+      console.log(res.data,"this from fetch data")
+      setSections(res.data.sections || []);
+      setLoading(false);
+    }
+    fetchData();
+  }, [query]);
+
+  return (
+    <section className="px-20 pt-16 pb-10 bg-black text-white">
+      <h2 className={`${bricolage_grotesque} text-3xl font-semibold`}>
+        {heading}
+      </h2>
+
+      {/* Loading Skeleton */}
+      {loading ? (
+        <div className="flex flex-wrap gap-6 mt-8">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <CardSkeleton key={i} />
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-wrap gap-6 mt-8">
+          {sections.length === 0 ? (
+            <p className="text-neutral-500">No data found</p>
+          ) : (
+            sections.map((feed, i) => (
+              <div key={i} className="w-[400px]">
+                <FeedCard {...feed} />
+              </div>
+            ))
+          )}
+        </div>
+      )}
+    </section>
+  );
+}

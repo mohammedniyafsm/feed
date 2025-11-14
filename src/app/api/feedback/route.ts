@@ -104,33 +104,32 @@ export async function DELETE(request: Request) {
   }
 }
 
-// GET ALL COMMENTS BY LOGGED-IN USER
+// GET feedback of session
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session || !session.user || !session.user.id) {
+    if (!session || !session.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Optional: support filtering by sectionId
     const url = new URL(request.url);
     const sectionId = url.searchParams.get("sectionId");
 
+    if (!sectionId) {
+      return NextResponse.json({ error: "Section ID required" }, { status: 400 });
+    }
+
     const feedbacks = await prisma.feedback.findMany({
-      where: {
-        userId: session.user.id,
-        ...(sectionId ? { sectionId } : {}), // filter by section if provided
-      },
+      where: { sectionId },
       include: {
-        section: {
-          include: { user: true }, // includes section info and presenter
-        },
+        user: true,
       },
       orderBy: { createdAt: "desc" },
     });
 
     return NextResponse.json(feedbacks, { status: 200 });
+
   } catch (error) {
     console.error("GET User Feedback Error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

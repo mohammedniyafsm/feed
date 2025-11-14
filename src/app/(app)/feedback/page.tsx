@@ -6,29 +6,71 @@ import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TextAnimate } from "@/components/ui/text-animate";
-import { bricolage_grotesque, inter } from "@/lib/fonts";
-import { FeedCard } from "@/components/ui/FeedCard";
 import FeedComponent from "@/components/FEEDBACK-COMP/FeedComponent";
+import { bricolage_grotesque, inter } from "@/lib/fonts";
 
-function FeedBack() {
+export default function FeedBack() {
+  const [search, setSearch] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [isSearching, setIsSearching] = useState(false);
+
+  const today = new Date();
+  const yesterday = new Date(Date.now() - 86400000);
+  const dayBefore = new Date(Date.now() - 2 * 86400000);
+
+  // Format for display
+  const formatDate = (date: Date) =>
+    date.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+
+  // Format for query (YYYY-MM-DD) preserving local date
+  const formatQueryDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  // Handle search click
+  const handleSearch = () => {
+    if (selectedDate && selectedDate > new Date()) {
+      alert("You cannot search for future sessions.");
+      return;
+    }
+    setIsSearching(true);
+  };
+
+  // Reset search
+  const resetAll = () => {
+    setSearch("");
+    setSelectedDate(undefined);
+    setIsSearching(false);
+  };
+
+  let query = "";
+  const trimmed = search.trim();
+
+  if (isSearching) {
+    query = `topic=${trimmed}&date=${selectedDate ? formatQueryDate(selectedDate) : ""
+      }`;
+  }
 
   return (
     <div className="bg-black min-h-screen w-full text-white">
-
       <div className="pt-28 flex flex-col items-center">
-        <div className="group rounded-full border border-black/5 bg-neutral-100/10 text-base text-white transition-all ease-in hover:cursor-pointer hover:bg-neutral-200/20 dark:border-white/5 dark:bg-neutral-900 dark:hover:bg-neutral-800">
-          <span className="inline-flex items-center justify-center px-4 py-1 transition ease-out hover:text-neutral-400 hover:duration-300">
-            ✨ All Sessions Archive
-          </span>
+
+        <div className="group rounded-full bg-neutral-100/10 px-4 py-1">
+          ✨ All Sessions Archive
         </div>
 
         <div className="text-center pt-8">
           <TextAnimate
             animation="blurInUp"
             by="character"
-            once
-            className={`${bricolage_grotesque} font-semibold text-white text-6xl`}
+            className={`${bricolage_grotesque} text-6xl font-semibold`}
           >
             Explore All Sessions
           </TextAnimate>
@@ -36,63 +78,93 @@ function FeedBack() {
           <TextAnimate
             animation="blurInUp"
             by="character"
-            once
-            className={`${inter} pt-4 text-center text-neutral-400`}
+            className={`${inter} pt-4 text-neutral-400`}
           >
-            Browse through daily sessions, team discussions, and personal presentations
+            Browse through daily sessions and interesting presentations
           </TextAnimate>
 
-          {/* Search + Date Section */}
           <div className="flex gap-4 items-center mt-8">
+
+            {/* SEARCH INPUT */}
             <Input
-              placeholder="🔍 Search by topic, presenter or description..."
-              className={`${bricolage_grotesque} py-6 px-4 w-[600px] rounded-2xl bg-neutral-900 border border-neutral-700 text-white placeholder:text-neutral-500`}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="🔍 Search by topic or presenter..."
+              className="py-6 px-4 w-[600px] rounded-2xl bg-neutral-900 border border-neutral-700"
             />
 
-            <Button type="submit" variant="outline" className="mt-1">
+            <Button variant="outline" onClick={handleSearch}>
               Search
             </Button>
 
-            {/* Date Picker */}
+            {/* RESET BUTTON */}
+            {isSearching && (
+              <Button variant="destructive" onClick={resetAll}>
+                Reset
+              </Button>
+            )}
+
+            {/* DATE PICKER */}
             <Dialog.Root>
               <Dialog.Trigger asChild>
-                <Button type="submit" className="mt-1">
-                  {selectedDate ? selectedDate.toLocaleDateString() : "Select Date"}
+                <Button>
+                  {selectedDate ? formatDate(selectedDate) : "Select Date"}
                 </Button>
               </Dialog.Trigger>
 
-              <Dialog.Portal>
-                <Dialog.Overlay className="fixed inset-0 bg-black/50" />
-                <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background p-6 rounded-xl shadow-lg">
-                  <Dialog.Title className="text-white text-lg font-semibold mb-4">
-                    Select a Date
-                  </Dialog.Title>
+              <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background p-6 rounded-xl shadow-lg">
+                <Dialog.Title className="text-lg font-semibold mb-3">
+                  Pick a Date
+                </Dialog.Title>
 
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
-                  />
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(d) => {
+                    if (d && d <= new Date()) {
+                      setSelectedDate(d);
+                      setIsSearching(true);
+                      return;
+                    } else {
+                      alert("Not Available");
+                      return;
+                    }
+                  }}
+                />
 
-                  <div className="mt-4 flex justify-end gap-2">
-                    <Dialog.Close asChild>
-                      <Button variant="outline">Close</Button>
-                    </Dialog.Close>
-                  </div>
-                </Dialog.Content>
-              </Dialog.Portal>
+
+                <div className="flex justify-end pt-4">
+                  <Dialog.Close asChild>
+                    <Button variant="outline">Close</Button>
+                  </Dialog.Close>
+                </div>
+              </Dialog.Content>
             </Dialog.Root>
           </div>
         </div>
-
       </div>
 
-      <div className="">
-        <FeedComponent />
+      {/* FEED RESULTS */}
+      <div>
+        {isSearching ? (
+          <FeedComponent heading="Search Results" query={query} />
+        ) : (
+          <>
+            <FeedComponent
+              heading="Today's Highlights"
+              query={`date=${formatQueryDate(today)}`}
+            />
+            <FeedComponent
+              heading="Yesterday's Highlights"
+              query={`date=${formatQueryDate(yesterday)}`}
+            />
+            <FeedComponent
+              heading="Day Before"
+              query={`date=${formatQueryDate(dayBefore)}`}
+            />
+          </>
+        )}
       </div>
-
     </div>
   );
 }
-
-export default FeedBack;
