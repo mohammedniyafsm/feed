@@ -20,7 +20,7 @@ export default function SessionFilters({ selectedDate, onDateChange, category, o
   return (
     <div className="flex gap-3 items-center">
       {/* Category select */}
-      
+    
 
       {/* Inline calendar (small) */}
       <div className="relative">
@@ -29,7 +29,6 @@ export default function SessionFilters({ selectedDate, onDateChange, category, o
         </Button>
 
         {calendarOpen && (
-          <div className="absolute z-40 mt-2">
             <div className="bg-card/40 border border-border rounded-lg p-3">
               <Calendar
                 mode="single"
