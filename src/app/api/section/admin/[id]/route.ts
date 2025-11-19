@@ -1,40 +1,34 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
 
-//  Helper function to verify admin access
 async function verifyAdmin() {
   const session = await getServerSession(authOptions);
 
-  if (!session || !session.user?.id) {
-    return null;
-  }
+  if (!session?.user?.id) return null;
 
-  // Fetch role from DB based on GitHub ID
   const user = await prisma.user.findUnique({
     where: { githubId: session.user.id },
     select: { role: true },
   });
 
-  if (!user || user.role !== "ADMIN") {
-    return null;
-  }
+  if (!user || user.role !== "ADMIN") return null;
 
   return session;
 }
 
-//  GET SPECIFIC SESSION BY ID
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+// GET
+export async function GET(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   const session = await verifyAdmin();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized: Admins only" }, { status: 403 });
   }
 
-  const { id } = await  params;
-  if (!id) {
-    return NextResponse.json({ error: "No ID provided" }, { status: 400 });
-  }
+  const { id } = await context.params;
 
   try {
     const section = await prisma.section.findUnique({
@@ -53,14 +47,17 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-//  UPDATE SESSION DETAIL
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+// PATCH
+export async function PATCH(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   const session = await verifyAdmin();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized: Admins only" }, { status: 403 });
   }
 
-  const { id } = await  params;
+  const { id } = await context.params;
   const { topic, category, date } = await req.json();
 
   try {
@@ -80,14 +77,17 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   }
 }
 
-//  DELETE SESSION
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+// DELETE
+export async function DELETE(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   const session = await verifyAdmin();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized: Admins only" }, { status: 403 });
   }
 
-  const { id } = await params;
+  const { id } = await context.params;
 
   try {
     await prisma.section.delete({ where: { id } });
